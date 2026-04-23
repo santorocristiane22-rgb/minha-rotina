@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Minha Rotina">
+<meta name="application-name" content="Minha Rotina">
+<meta name="theme-color" content="#7a9e7e">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%237a9e7e'/%3E%3Ctext y='72' x='50' text-anchor='middle' font-size='60' font-family='sans-serif'%3E%F0%9F%8C%BF%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Minha%20Rotina%22%2C%22short_name%22%3A%22Rotina%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f5f0e8%22%2C%22theme_color%22%3A%22%237a9e7e%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%2520viewBox%3D%270%25200%2520100%2520100%27%253E%253Crect%2520width%3D%27100%27%2520height%3D%27100%27%2520rx%3D%2720%27%2520fill%3D%27%25237a9e7e%27%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+
+<title>🌿 Minha Rotina</title>
+<style>
+/* ══════════════════════════════════════════
+   RESET & VARIÁVEIS
+══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --sage: #7a9e7e; --sage-light: #a8c5ac; --sage-pale: #e8f0e9;
+  --terra: #c4856a; --terra-light: #e8b49a; --terra-pale: #faeae4;
+  --sand: #f5f0e8; --sand-dark: #e8dfd0;
+  --ink: #2d3436; --muted: #636e72;
+  --white: #fffef9; --gold: #c9a84c; --gold-pale: #faf3e0;
+  --navy: #3d5a99; --navy-pale: #e8edf7;
+  --purple: #8e6dbf; --purple-pale: #f0ebfa;
+  --danger: #e74c3c; --success: #27ae60;
+  --radius: 14px;
+}
+body {
+  font-family: -apple-system,'Segoe UI',sans-serif;
+  background: var(--sand); color: var(--ink);
+  font-size: 15px; line-height: 1.6; min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+#toast-container {
+  position: fixed; top: 72px; left: 50%; transform: translateX(-50%);
+  z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+  width: 92%; max-width: 420px; pointer-events: none;
+}
+.toast {
+  background: var(--ink); color: white; border-radius: 12px;
+  padding: 13px 16px; font-size: 14px; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+  display: flex; align-items: center; gap: 10px;
+  animation: tIn 0.35s ease, tOut 0.35s ease 3.65s forwards;
+  pointer-events: all;
+}
+.toast.lembrete { background: linear-gradient(135deg,var(--sage),#4a7a50); }
+.toast.med      { background: linear-gradient(135deg,var(--terra),#a0503a); }
+.toast.vitoria  { background: linear-gradient(135deg,var(--gold),#9a7020); }
+.toast.biblia   { background: linear-gradient(135deg,var(--purple),#6a4e9a); }
+.toast.livro    { background: linear-gradient(135deg,var(--navy),#1b2b4b); }
+.toast-icon { font-size: 20px; flex-shrink: 0; }
+@keyframes tIn  { from{opacity:0;transform:translateY(-14px)} to{opacity:1;transform:translateY(0)} }
+@keyframes tOut { from{opacity:1} to{opacity:0;transform:translateY(-8px)} }
+
+/* ══════════════════════════════════════════
+   MODAL OVERLAY
+══════════════════════════════════════════ */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 8000;
+  background: rgba(0,0,0,0.45); align-items: flex-end; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--white); border-radius: 20px 20px 0 0;
+  padding: 24px 20px 40px; width: 100%; max-width: 520px;
+  max-height: 90vh; overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-title { font-size: 18px; font-weight: 800; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+.modal-close {
+  margin-left: auto; background: var(--sand-dark); border: none;
+  border-radius: 50%; width: 32px; height: 32px; font-size: 16px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
+/* ══════════════════════════════════════════
+   NAV
+══════════════════════════════════════════ */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--white); border-bottom: 2px solid var(--sand-dark);
+  box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+  overflow-x: auto; scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav-inner {
+  display: flex; align-items: center;
+  padding: 0 10px; gap: 0; min-width: max-content;
+}
+.nav-brand {
+  font-size: 15px; font-weight: 800; color: var(--sage);
+  padding: 13px 10px 13px 4px; white-space: nowrap;
+}
+.tab-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--muted); padding: 15px 10px 13px;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: all 0.2s; white-space: nowrap;
+}
+.tab-btn.active { color: var(--sage); border-bottom-color: var(--sage); }
+
+/* ══════════════════════════════════════════
+   PÁGINAS
+══════════════════════════════════════════ */
+.page { display: none; }
+.page.active { display: block; animation: fadeUp 0.3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.container { max-width: 640px; margin: 0 auto; padding: 20px 14px 80px; }
+
+/* ══════════════════════════════════════════
+   HERO
+══════════════════════════════════════════ */
+.hero {
+  background: linear-gradient(135deg,var(--sage),#5a7d5e);
+  border-radius: var(--radius); padding: 26px 22px; color: white;
+  margin-bottom: 20px; position: relative; overflow: hidden;
+}
+.hero::before {
+  content:''; position:absolute; top:-40px; right:-40px;
+  width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,0.07);
+}
+.hero-label { font-size:10px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; opacity:0.75; margin-bottom:5px; }
+.hero h1 { font-size:22px; font-weight:800; line-height:1.2; margin-bottom:6px; }
+.hero p  { font-size:13px; opacity:0.88; line-height:1.6; }
+.hero.terra  { background:linear-gradient(135deg,var(--terra),#a0503a); }
+.hero.navy   { background:linear-gradient(135deg,var(--navy),#1b2b4b); }
+.hero.gold   { background:linear-gradient(135deg,var(--gold),#9a7020); }
+.hero.dark   { background:linear-gradient(135deg,#5a6d8a,#3a4a60); }
+.hero.purple { background:linear-gradient(135deg,var(--purple),#6a4e9a); }
+
+/* ══════════════════════════════════════════
+   SEÇÃO
+══════════════════════════════════════════ */
+.sec-title {
+  font-size:17px; font-weight:800; color:var(--ink);
+  margin:22px 0 12px; display:flex; align-items:center; gap:10px;
+}
+.sec-title::after { content:''; flex:1; height:1px; background:var(--sand-dark); }
+
+/* ══════════════════════════════════════════
+   PROGRESSO — CÍRCULOS
+══════════════════════════════════════════ */
+.progress-panel {
+  background:var(--white); border-radius:var(--radius); padding:16px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.06); margin-bottom:18px;
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;
+}
+.prog-block { text-align:center; }
+.prog-circle {
+  width:62px; height:62px; border-radius:50%;
+  background:conic-gradient(var(--sage) 0%,var(--sand-dark) 0%);
+  margin:0 auto 5px; display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:800; color:var(--ink); position:relative;
+}
+.prog-circle::before {
+  content:''; position:absolute; inset:6px;
+  border-radius:50%; background:var(--white);
+}
+.prog-circle span { position:relative; z-index:1; }
+.prog-label { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; }
+
+/* barra */
+.prog-bar-wrap { margin-bottom:18px; }
+.prog-bar-label { display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:5px; }
+.prog-bar { height:10px; background:var(--sand-dark); border-radius:5px; overflow:hidden; }
+.prog-fill { height:100%; background:linear-gradient(90deg,var(--sage),var(--sage-light)); border-radius:5px; transition:width 0.4s ease; }
+
+/* ══════════════════════════════════════════
+   CHECKLIST
+══════════════════════════════════════════ */
+.check-section {
+  background:var(--white); border-radius:var(--radius);
+  padding:14px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:12px;
+}
+.check-section-title {
+  font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.07em;
+  margin-bottom:10px; display:flex; align-items:center; gap:8px;
+}
+.check-item {
+  display:flex; align-items:center; gap:13px;
+  padding:12px 0; border-bottom:1px solid var(--sand);
+  cursor:pointer; min-height:50px; transition:opacity 0.2s;
+}
+.check-item:last-child { border-bottom:none; }
+.check-box {
+  width:26px; height:26px; border:2px solid var(--sage-light);
+  border-radius:6px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; transition:all 0.2s;
+}
+.check-item.done .check-box { background:var(--sage); border-color:var(--sage); color:white; }
+.check-item.done .check-text { text-decoration:line-through; opacity:0.45; }
+.check-text { font-size:14px; color:var(--muted); line-height:1.4; flex:1; }
+/* variantes de cor */
+.check-item.med-item  .check-box { border-color:var(--terra-light); }
+.check-item.med-item.done .check-box  { background:var(--terra); border-color:var(--terra); }
+.check-item.biblia-item .check-box { border-color:#c0a0e0; }
+.check-item.biblia-item.done .check-box { background:var(--purple); border-color:var(--purple); }
+.check-item.livro-item .check-box { border-color:#9ab0d8; }
+.check-item.livro-item.done .check-box { background:var(--navy); border-color:var(--navy); }
+.check-item.culto-item .check-box { border-color:#f0c870; }
+.check-item.culto-item.done .check-box { background:var(--gold); border-color:var(--gold); }
+
+/* ══════════════════════════════════════════
+   HÁBITOS CLICÁVEIS (Ansiedade)
+══════════════════════════════════════════ */
+.habit-grid { display:flex; flex-wrap:wrap; gap:9px; margin-bottom:18px; }
+.habit-btn {
+  background:var(--white); border:2px solid var(--sage-pale);
+  border-radius:20px; padding:8px 14px;
+  font-size:13px; font-weight:700; color:var(--sage);
+  cursor:pointer; transition:all 0.2s; user-select:none;
+  display:flex; align-items:center; gap:6px;
+}
+.habit-btn.terra { color:var(--terra); border-color:var(--terra-pale); }
+.habit-btn.active { background:var(--sage); color:white; border-color:var(--sage); }
+.habit-btn.terra.active { background:var(--terra); color:white; border-color:var(--terra); }
+.habit-btn .habit-count {
+  background:rgba(255,255,255,0.3); border-radius:10px;
+  padding:1px 6px; font-size:11px;
+}
+.habit-btn:not(.active) .habit-count { background:var(--sand-dark); color:var(--muted); }
+
+/* ══════════════════════════════════════════
+   MANTRA
+══════════════════════════════════════════ */
+.mantra {
+  background:var(--white); border-left:4px solid var(--gold);
+  border-radius:0 10px 10px 0; padding:13px 16px; margin-bottom:20px;
+  font-size:14px; font-style:italic; font-weight:600; color:var(--ink);
+}
+.mantra small { color:var(--muted); font-style:normal; font-size:12px; display:block; margin-top:4px; }
+
+/* ══════════════════════════════════════════
+   BLOCOS DO DIA
+══════════════════════════════════════════ */
+.block-card {
+  background:var(--white); border-radius:var(--radius);
+  padding:16px; border-left:4px solid var(--sage);
+  box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:10px;
+}
+.block-card.terra { border-left-color:var(--terra); }
+.block-card.gold  { border-left-color:var(--gold); }
+.block-time { font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--sage); margin-bottom:4px; }
+.block-card.terra .block-time { color:var(--terra); }
+.block-card.gold  .block-time { color:var(--gold); }
+.block-name { font-size:16px; font-weight:800; color:var(--ink); margin-bottom:8px; }
+.block-items { list-style:none; display:flex; flex-direction:column; gap:5px; }
+.block-items li { font-size:13px; color:var(--muted); padding-left:13px; position:relative; line-height:1.45; }
+.block-items li::before { content:'●'; position:absolute; left:0; font-size:6px; top:6px; color:var(--sage); }
+.block-card.terra .block-items li::before { color:var(--terra); }
+.block-card.gold  .block-items li::before { color:var(--gold); }
+.block-note { margin-top:9px; background:var(--sage-pale); border-radius:6px; padding:7px 10px; font-size:12px; color:var(--sage); font-weight:700; }
+.block-card.terra .block-note { background:var(--terra-pale); color:var(--terra); }
+.block-card.gold  .block-note { background:var(--gold-pale); color:var(--gold); }
+
+/* ══════════════════════════════════════════
+   SEMANA
+══════════════════════════════════════════ */
+.week-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:20px; }
+.day-card { background:var(--white); border-radius:10px; padding:9px 4px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+.day-card.rest { background:linear-gradient(135deg,#e8f0e9,#f5f0e8); }
+.day-name  { font-size:9px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+.day-emoji { font-size:17px; margin-bottom:3px; }
+.day-label { font-size:9px; font-weight:700; color:var(--ink); line-height:1.3; }
+
+/* ══════════════════════════════════════════
+   REGRAS
+══════════════════════════════════════════ */
+.rule-card { background:var(--white); border-radius:var(--radius); padding:14px; display:flex; gap:13px; align-items:flex-start; box-shadow:0 2px 10px rgba(0,0,0,0.05); margin-bottom:9px; }
+.rule-num { width:32px; height:32px; border-radius:50%; background:var(--sage-pale); color:var(--sage); font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.rule-num.terra { background:var(--terra-pale); color:var(--terra); }
+.rule-title { font-weight:800; font-size:14px; margin-bottom:3px; }
+.rule-desc  { font-size:13px; color:var(--muted); line-height:1.5; }
+
+/* ══════════════════════════════════════════
+   EXERCÍCIO
+══════════════════════════════════════════ */
+.ex-card { background:var(--white); border-radius:var(--radius); padding:16px; box-shadow:0 2px 12px rgba(0,0,0,0.05); border-bottom:3px solid var(--sage); margin-bottom:10px; }
+.ex-card.terra { border-bottom-color:var(--terra); }
+.ex-card.gold  { border-bottom-color:var(--gold); }
+.ex-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.ex-emoji  { font-size:24px; }
+.ex-name   { font-size:16px; font-weight:800; flex:1; }
+.ex-badge  { background:var(--sage-pale); color:var(--sage); font-size:10px; font-weight:700; padding:3px 8px; border-radius:10px; white-space:nowrap; }
+.ex-card.terra .ex-badge { background:var(--terra-pale); color:var(--terra); }
+.ex-card.gold  .ex-badge { background:var(--gold-pale);  color:var(--gold); }
+.ex-steps { list-style:none; display:flex; flex-direction:column; gap:6px; }
+.ex-steps li { font-size:13px; color:var(--muted); padding-left:18px; position:relative; line-height:1.45; }
+.ex-steps li:nth-child(1)::before{content:'1.'}
+.ex-steps li:nth-child(2)::before{content:'2.'}
+.ex-steps li:nth-child(3)::before{content:'3.'}
+.ex-steps li:nth-child(4)::before{content:'4.'}
+.ex-steps li:nth-child(5)::before{content:'5.'}
+.ex-steps li::before { position:absolute; left:0; font-weight:700; color:var(--sage); }
+.ex-card.terra .ex-steps li::before { color:var(--terra); }
+.ex-card.gold  .ex-steps li::before { color:var(--gold); }
+.ex-tip { margin-top:10px; font-size:12px; color:var(--sage); font-style:italic; border-top:1px dashed var(--sage-pale); padding-top:9px; }
+.ex-card.terra .ex-tip { color:var(--terra); border-top-color:var(--terra-pale); }
+.ex-card.gold  .ex-tip { color:var(--gold);  border-top-color:var(--gold-pale); }
+
+/* ══════════════════════════════════════════
+   ANSIEDADE
+══════════════════════════════════════════ */
+.anx-card { background:var(--white); border-radius:var(--radius); padding:18px; text-align:center; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:10px; }
+.anx-icon  { font-size:28px; margin-bottom:8px; }
+.anx-name  { font-size:16px; font-weight:800; margin-bottom:7px; }
+.anx-desc  { font-size:13px; color:var(--muted); line-height:1.55; }
+.anx-time  { display:inline-block; margin-top:9px; background:var(--sage-pale); color:var(--sage); font-size:11px; font-weight:700; padding:4px 11px; border-radius:10px; }
+
+/* ══════════════════════════════════════════
+   DIÁRIO VITÓRIAS
+══════════════════════════════════════════ */
+.vitoria-box { background:linear-gradient(135deg,var(--terra),#a8614a); border-radius:var(--radius); padding:20px; color:white; margin-bottom:18px; position:relative; overflow:hidden; }
+.vitoria-box::before { content:'★'; position:absolute; right:16px; top:10px; font-size:54px; opacity:0.1; }
+.vitoria-box h3 { font-size:17px; font-weight:800; margin-bottom:7px; }
+.vitoria-box p  { font-size:13px; opacity:0.9; line-height:1.6; }
+.vitoria-input-area { background:rgba(255,255,255,0.15); border-radius:10px; padding:11px; margin-top:12px; }
+.vitoria-input-area textarea { width:100%; background:transparent; border:none; outline:none; color:white; font-size:15px; resize:none; min-height:60px; line-height:1.6; font-family:inherit; }
+.vitoria-input-area textarea::placeholder { color:rgba(255,255,255,0.5); }
+.btn-primary { background:white; color:var(--terra); border:none; border-radius:10px; padding:12px 20px; font-weight:800; font-size:14px; cursor:pointer; margin-top:9px; width:100%; transition:opacity 0.2s; }
+.btn-primary:active { opacity:0.8; }
+.vitoria-item { background:var(--white); border-radius:10px; padding:13px; font-size:14px; display:flex; align-items:flex-start; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05); margin-bottom:8px; }
+.vitoria-item-icon { color:var(--gold); flex-shrink:0; font-size:16px; }
+.vitoria-item-text { flex:1; color:var(--ink); line-height:1.4; }
+.vitoria-item-date { font-size:11px; color:var(--muted); white-space:nowrap; padding-top:2px; }
+.vitoria-empty { text-align:center; padding:22px; color:var(--muted); font-size:14px; background:var(--white); border-radius:var(--radius); margin-bottom:8px; }
+
+/* ══════════════════════════════════════════
+   LEMBRETES EDITÁVEIS
+══════════════════════════════════════════ */
+.lembrete-item {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 0; border-bottom:1px solid var(--sand);
+}
+.lembrete-item:last-child { border-bottom:none; }
+.lembrete-hora-input {
+  border:1.5px solid var(--sand-dark); border-radius:8px;
+  padding:6px 8px; font-size:14px; font-weight:800; color:var(--sage);
+  width:82px; background:var(--sand); font-family:inherit;
+  -webkit-appearance:none;
+}
+.lembrete-hora-input:focus { outline:none; border-color:var(--sage); }
+.lembrete-texto { flex:1; font-size:13px; color:var(--muted); }
+.lembrete-status { font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px; white-space:nowrap; }
+.lembrete-status.ativo   { background:var(--sage-pale); color:var(--sage); }
+.lembrete-status.passado { background:var(--sand-dark);  color:var(--muted); }
+
+/* ══════════════════════════════════════════
+   DIAGNÓSTICO / RANKING
+══════════════════════════════════════════ */
+.diag-card { background:var(--white); border-radius:var(--radius); padding:16px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:12px; }
+.diag-title { font-size:15px; font-weight:800; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.diag-item { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--sand); }
+.diag-item:last-child { border-bottom:none; }
+.diag-rank { width:26px; height:26px; border-radius:50%; background:var(--sand-dark); color:var(--muted); font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.diag-rank.r1 { background:#fde8e8; color:var(--danger); }
+.diag-rank.r2 { background:var(--terra-pale); color:var(--terra); }
+.diag-rank.r3 { background:var(--gold-pale); color:var(--gold); }
+.diag-name  { flex:1; font-size:13px; color:var(--muted); line-height:1.4; }
+.diag-count { font-size:12px; font-weight:800; color:var(--terra); background:var(--terra-pale); padding:3px 8px; border-radius:8px; white-space:nowrap; }
+.diag-count.good { color:var(--sage); background:var(--sage-pale); }
+.diag-empty { font-size:13px; color:var(--muted); text-align:center; padding:14px 0; }
+
+/* ══════════════════════════════════════════
+   INFO BOX
+══════════════════════════════════════════ */
+.info-box { background:linear-gradient(135deg,var(--navy),#1b2b4b); border-radius:var(--radius); padding:18px 20px; color:white; margin-bottom:18px; }
+.info-box h3 { font-size:15px; font-weight:800; margin-bottom:7px; }
+.info-box p  { font-size:13px; opacity:0.88; line-height:1.65; }
+.info-box ul { margin-top:8px; padding-left:16px; display:flex; flex-direction:column; gap:4px; }
+.info-box ul li { font-size:13px; opacity:0.88; line-height:1.5; }
+
+/* ══════════════════════════════════════════
+   RELATÓRIO
+══════════════════════════════════════════ */
+.relatorio-card {
+  background:var(--white); border-radius:var(--radius);
+  padding:16px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:12px;
+}
+.relatorio-dia {
+  border-left:3px solid var(--sage); padding:12px 14px;
+  margin-bottom:8px; border-radius:0 8px 8px 0; background:var(--sand);
+}
+.relatorio-dia-data { font-size:12px; font-weight:800; color:var(--sage); margin-bottom:4px; }
+.relatorio-dia-pct  { font-size:22px; font-weight:800; color:var(--ink); }
+.relatorio-dia-sub  { font-size:12px; color:var(--muted); }
+.relatorio-habitos  { display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
+.relatorio-habito-tag {
+  font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px;
+  background:var(--sage-pale); color:var(--sage);
+}
+.relatorio-habito-tag.miss { background:#fde8e8; color:var(--danger); }
+
+.btn-export {
+  background:linear-gradient(135deg,var(--navy),#1b2b4b);
+  color:white; border:none; border-radius:12px;
+  padding:14px 20px; font-size:14px; font-weight:800;
+  cursor:pointer; width:100%; margin-bottom:10px;
+  transition:opacity 0.2s;
+}
+.btn-export:active { opacity:0.85; }
+.btn-reset {
+  background:none; border:1.5px solid var(--sand-dark);
+  border-radius:10px; padding:11px 16px;
+  font-size:13px; font-weight:700; color:var(--muted);
+  cursor:pointer; width:100%; margin-top:10px;
+}
+.btn-reset.danger { color:var(--danger); border-color:var(--danger); }
+.btn-reset:active { background:var(--sand-dark); }
+
+/* input geral */
+.input-field {
+  width:100%; border:1.5px solid var(--sand-dark); border-radius:10px;
+  padding:11px 14px; font-size:14px; font-family:inherit;
+  background:var(--sand); color:var(--ink); margin-bottom:10px;
+}
+.input-field:focus { outline:none; border-color:var(--sage); }
+
+/* ══ BANNER INSTALAÇÃO ══ */
+#install-banner {
+  display:none; position:fixed; bottom:0; left:0; right:0; z-index:9998;
+  background:linear-gradient(135deg,#7a9e7e,#4a7a50);
+  color:white; padding:14px 16px; box-shadow:0 -4px 20px rgba(0,0,0,0.18);
+  animation: slideUp2 0.4s ease;
+}
+@keyframes slideUp2 { from{transform:translateY(100%)} to{transform:translateY(0)} }
+#install-banner .ib-row { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+#install-banner .ib-icon { font-size:28px; flex-shrink:0; }
+#install-banner .ib-text { flex:1; font-size:13px; line-height:1.4; font-weight:600; }
+#install-banner .ib-btns { display:flex; gap:8px; }
+#install-banner .ib-btn-ok {
+  background:white; color:#7a9e7e; border:none; border-radius:10px;
+  padding:10px 18px; font-size:13px; font-weight:800; cursor:pointer; flex:1;
+}
+#install-banner .ib-btn-close {
+  background:rgba(255,255,255,0.2); color:white; border:none; border-radius:10px;
+  padding:10px 14px; font-size:13px; font-weight:700; cursor:pointer;
+}
+#guide-modal {
+  display:none; position:fixed; inset:0; z-index:9997;
+  background:rgba(0,0,0,0.5); align-items:flex-end; justify-content:center;
+}
+#guide-modal.open { display:flex; }
+#guide-box {
+  background:#fffef9; border-radius:20px 20px 0 0;
+  padding:24px 20px 40px; width:100%; max-width:520px;
+  animation: slideUp 0.3s ease;
+}
+#guide-box h2 { font-size:18px; font-weight:800; margin-bottom:4px; }
+#guide-box .g-sub { font-size:13px; color:#636e72; margin-bottom:18px; }
+.guide-step {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:12px 0; border-bottom:1px solid #f5f0e8;
+}
+.guide-step:last-child { border-bottom:none; }
+.guide-step-num {
+  width:30px; height:30px; border-radius:50%;
+  background:#e8f0e9; color:#7a9e7e;
+  font-size:14px; font-weight:800; display:flex;
+  align-items:center; justify-content:center; flex-shrink:0;
+}
+.guide-step-text { font-size:14px; color:#2d3436; line-height:1.5; }
+.guide-step-text strong { color:#7a9e7e; }
+.guide-close {
+  margin-top:18px; width:100%; background:#7a9e7e; color:white;
+  border:none; border-radius:12px; padding:14px; font-size:15px;
+  font-weight:800; cursor:pointer;
+}
+
+</style>
+</head>
+<body>
+
+
+<!-- ══ BANNER INSTALAÇÃO ══ -->
+<div id="install-banner">
+  <div class="ib-row">
+    <div class="ib-icon">🌿</div>
+    <div class="ib-text">Instale o app na tela inicial para usar sem internet!</div>
+  </div>
+  <div class="ib-btns">
+    <button class="ib-btn-ok" onclick="mostrarGuia()">📲 Ver como instalar</button>
+    <button class="ib-btn-close" onclick="fecharBanner()">✕ Fechar</button>
+  </div>
+</div>
+
+<!-- GUIA DE INSTALAÇÃO -->
+<div id="guide-modal">
+  <div id="guide-box">
+    <h2>📲 Instalar na Tela Inicial</h2>
+    <p class="g-sub">Funciona offline depois de instalado!</p>
+
+    <div id="guide-android" style="display:none">
+      <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-text">Toque no menu <strong>⋮ (três pontos)</strong> no canto superior direito do Chrome</div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-text">Toque em <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar app"</strong></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-text">Toque em <strong>"Adicionar"</strong> na janela que aparecer</div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div class="guide-step-text">O ícone <strong>🌿 Minha Rotina</strong> vai aparecer na sua tela inicial!</div></div>
+    </div>
+
+    <div id="guide-ios" style="display:none">
+      <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-text">Toque no ícone de <strong>compartilhar 🔗</strong> (quadrado com seta para cima) na barra inferior do Safari</div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-text">Role a lista e toque em <strong>"Adicionar à Tela de Início"</strong></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-text">Toque em <strong>"Adicionar"</strong> no canto superior direito</div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div class="guide-step-text">O ícone <strong>🌿 Minha Rotina</strong> vai aparecer na sua tela inicial!</div></div>
+    </div>
+
+    <div id="guide-other">
+      <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-text"><strong>Android/Chrome:</strong> Menu ⋮ → "Adicionar à tela inicial"</div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-text"><strong>iPhone/Safari:</strong> Botão compartilhar 🔗 → "Adicionar à Tela de Início"</div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-text">Depois de instalado, abre <strong>sem internet</strong> e seus dados ficam salvos!</div></div>
+    </div>
+
+    <div style="background:#e8f0e9;border-radius:10px;padding:12px;margin-top:14px;font-size:13px;color:#4a7a50;font-weight:600">
+      ⚠️ <strong>Importante:</strong> O app precisa estar salvo no celular (baixado). Abra o arquivo pelo gerenciador de arquivos do celular, não por link.
+    </div>
+
+    <button class="guide-close" onclick="fecharGuia()">✓ Entendi!</button>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast-container"></div>
+
+<!-- ── MODAL: EDITAR LEMBRETES ── -->
+<div class="modal-overlay" id="modal-lembretes">
+  <div class="modal-box">
+    <div class="modal-title">
+      🔔 Editar Lembretes
+      <button class="modal-close" onclick="fecharModal('modal-lembretes')">✕</button>
+    </div>
+    <div id="form-lembretes"></div>
+    <button class="btn-export" style="margin-top:4px" onclick="salvarLembretes()">💾 Salvar Lembretes</button>
+  </div>
+</div>
+
+<!-- ── NAV ── -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand">🌿 Rotina</div>
+    <button class="tab-btn active"  onclick="goTo('rotina',this)">Hoje</button>
+    <button class="tab-btn"         onclick="goTo('exercicio',this)">Exercício</button>
+    <button class="tab-btn"         onclick="goTo('ansiedade',this)">Ansiedade</button>
+    <button class="tab-btn"         onclick="goTo('diario',this)">Diário</button>
+    <button class="tab-btn"         onclick="goTo('relatorio',this)">Relatório</button>
+    <button class="tab-btn"         onclick="goTo('config',this)">⚙️</button>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════
+     PÁGINA: HOJE
+════════════════════════════════════════ -->
+<div class="page active" id="page-rotina">
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-label">Seu plano · dia a dia</div>
+    <h1>Olá, Cristiane 🌿<br><span id="data-hoje" style="font-size:15px;opacity:0.85;font-weight:400"></span></h1>
+    <p>Consistência acima de perfeição. 1 coisa feita já é vitória.</p>
+  </div>
+
+  <!-- PROGRESSO -->
+  <div class="sec-title">Progresso</div>
+  <div class="progress-panel">
+    <div class="prog-block">
+      <div class="prog-circle" id="circ-dia"><span id="pct-dia">0%</span></div>
+      <div class="prog-label">Hoje</div>
+    </div>
+    <div class="prog-block">
+      <div class="prog-circle" id="circ-sem"><span id="pct-sem">0%</span></div>
+      <div class="prog-label">Semana</div>
+    </div>
+    <div class="prog-block">
+      <div class="prog-circle" id="circ-mes"><span id="pct-mes">0%</span></div>
+      <div class="prog-label">Mês</div>
+    </div>
+  </div>
+  <div class="prog-bar-wrap">
+    <div class="prog-bar-label"><span>Checklist de hoje</span><span id="check-count">0 / 0</span></div>
+    <div class="prog-bar"><div class="prog-fill" id="check-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- CHECKLIST MANHÃ -->
+  <div class="check-section">
+    <div class="check-section-title">🌅 Manhã</div>
+    <div class="check-item" data-id="c1" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">Levantei sem ficar na cama com celular</div>
+    </div>
+    <div class="check-item" data-id="c2" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">Defini minhas 3 prioridades do dia</div>
+    </div>
+    <div class="check-item" data-id="c3" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">Tomei água ou café com calma (5 min)</div>
+    </div>
+    <div class="check-item" data-id="c4" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">Fiz algum movimento (mesmo que 5 min)</div>
+    </div>
+    <div class="check-item med-item" data-id="med1" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">💊 Tomei a medicação da manhã</div>
+    </div>
+    <div class="check-item biblia-item" data-id="biblia" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">📖 Li a Bíblia hoje</div>
+    </div>
+    <div class="check-item livro-item" data-id="livro" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">📚 Li meu livro hoje (hábito de leitura)</div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST NOITE -->
+  <div class="check-section">
+    <div class="check-section-title">🌆 Noite</div>
+    <div class="check-item" data-id="c5" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">Completei pelo menos 1 das 3 prioridades</div>
+    </div>
+    <div class="check-item" data-id="c6" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">Fiz minha atividade noturna do dia</div>
+    </div>
+    <div class="check-item" data-id="c7" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">Anotei 1 vitória pequena do dia</div>
+    </div>
+    <div class="check-item" data-id="c8" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">Coloquei o celular longe 30 min antes de dormir</div>
+    </div>
+    <div class="check-item med-item" data-id="med2" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">💊 Tomei a medicação da noite</div>
+    </div>
+  </div>
+
+  <!-- CULTO (aparece só domingo) -->
+  <div class="check-section" id="section-culto" style="display:none">
+    <div class="check-section-title">⛪ Domingo</div>
+    <div class="check-item culto-item" data-id="culto" onclick="toggleCheck(this)">
+      <div class="check-box"></div><div class="check-text">✝️ Fui ao culto hoje</div>
+    </div>
+  </div>
+
+  <button class="btn-reset" onclick="resetDia()">🔄 Reiniciar checklist de hoje</button>
+
+  <!-- BLOCOS DO DIA -->
+  <div class="sec-title">Blocos do Dia</div>
+  <div class="block-card">
+    <div class="block-time">🌅 Manhã · 30 min</div>
+    <div class="block-name">Ativação</div>
+    <ul class="block-items">
+      <li>10 min de alongamento ou caminhada leve</li>
+      <li>3 prioridades do dia no papel ou celular</li>
+      <li>1 café sem celular (respiro intencional)</li>
+    </ul>
+    <div class="block-note">💡 Dia corrido: só as 3 prioridades. 2 min bastam.</div>
+  </div>
+  <div class="block-card terra">
+    <div class="block-time">💼 Trabalho · foco</div>
+    <div class="block-name">Modo Analista</div>
+    <ul class="block-items">
+      <li>Pomodoro: 25 min foco / 5 min pausa</li>
+      <li>Ataque a 1ª prioridade primeiro</li>
+      <li>Notificações silenciosas no bloco</li>
+    </ul>
+    <div class="block-note">🍅 App gratuito: pomofocus.io</div>
+  </div>
+  <div class="block-card gold">
+    <div class="block-time">🌆 Noite · 30–40 min</div>
+    <div class="block-name">Investimento</div>
+    <ul class="block-items">
+      <li><strong>2ª e 4ª:</strong> Estudo / curso da área</li>
+      <li><strong>3ª e 5ª:</strong> Exercício leve em casa</li>
+      <li><strong>Sáb/Dom:</strong> Descanso real</li>
+    </ul>
+    <div class="block-note">⚡ Escolha UM foco por noite.</div>
+  </div>
+
+  <!-- SEMANA -->
+  <div class="sec-title">Semana Padrão</div>
+  <div class="week-grid">
+    <div class="day-card"><div class="day-name">Seg</div><div class="day-emoji">📚</div><div class="day-label">Estudo</div></div>
+    <div class="day-card"><div class="day-name">Ter</div><div class="day-emoji">🏃</div><div class="day-label">Exerc.</div></div>
+    <div class="day-card"><div class="day-name">Qua</div><div class="day-emoji">📚</div><div class="day-label">Estudo</div></div>
+    <div class="day-card"><div class="day-name">Qui</div><div class="day-emoji">🏃</div><div class="day-label">Exerc.</div></div>
+    <div class="day-card"><div class="day-name">Sex</div><div class="day-emoji">💼</div><div class="day-label">Foco</div></div>
+    <div class="day-card rest"><div class="day-name">Sáb</div><div class="day-emoji">🌿</div><div class="day-label">Livre</div></div>
+    <div class="day-card rest"><div class="day-name">Dom</div><div class="day-emoji">⛪</div><div class="day-label">Culto</div></div>
+  </div>
+
+  <!-- REGRAS -->
+  <div class="sec-title">Regras Anti-Quebra</div>
+  <div class="rule-card"><div class="rule-num">1</div><div><div class="rule-title">Regra dos 2 minutos</div><div class="rule-desc">Se leva menos de 2 min, faça agora.</div></div></div>
+  <div class="rule-card"><div class="rule-num">2</div><div><div class="rule-title">Regra do mínimo viável</div><div class="rule-desc">Nos dias ruins: só 5 minutos. Começar já é vencer.</div></div></div>
+  <div class="rule-card"><div class="rule-num terra">3</div><div><div class="rule-title">Regra do não-pulo</div><div class="rule-desc">Pode falhar um dia. Nunca dois seguidos.</div></div></div>
+  <div class="rule-card"><div class="rule-num terra">4</div><div><div class="rule-title">Regra das 3 prioridades</div><div class="rule-desc">Só 3 tarefas por dia. Feitas as 3 = sucesso.</div></div></div>
+
+  <div class="mantra">
+    "Se não consegui fazer tudo, fiz o suficiente se fiz pelo menos 1 coisa."
+    <small>— Sua âncora nos dias difíceis</small>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PÁGINA: EXERCÍCIO
+════════════════════════════════════════ -->
+<div class="page" id="page-exercicio">
+<div class="container">
+  <div class="hero terra">
+    <div class="hero-label">Sem academia · Sem equipamento</div>
+    <h1>Movimento em Casa 🏃</h1>
+    <p>15 min, 3x por semana. Foco em reduzir ansiedade e aumentar energia.</p>
+  </div>
+  <div class="mantra" style="border-left-color:var(--terra)">
+    "10 minutos todo dia valem mais que 1 hora uma vez por semana."
+    <small>— Consistência é o único treino que funciona</small>
+  </div>
+  <div class="sec-title">Módulos — Escolha Um</div>
+  <div class="ex-card">
+    <div class="ex-header"><div class="ex-emoji">🧘</div><div class="ex-name">Módulo Calma</div><div class="ex-badge">10–15 min</div></div>
+    <ul class="ex-steps"><li>Deite no chão, respire fundo 5x pelo nariz</li><li>Pescoço: gire devagar para cada lado (1 min)</li><li>Ombros: suba e solte 10x, gire para trás</li><li>Coluna: joelhos ao peito, balance suavemente</li><li>Finalize com 3 respirações longas</li></ul>
+    <div class="ex-tip">📱 "Yoga com Adriene" no YouTube — em português, gratuito</div>
+  </div>
+  <div class="ex-card terra">
+    <div class="ex-header"><div class="ex-emoji">💪</div><div class="ex-name">Módulo Ativação</div><div class="ex-badge">15 min</div></div>
+    <ul class="ex-steps"><li>Aquecimento: 1 min de marcha no lugar</li><li>10 agachamentos (pode segurar na cadeira)</li><li>10 flexões (pode ser no joelho ou parede)</li><li>30 seg de prancha (cotovelos no chão)</li><li>Repita 2–3x com 1 min de descanso</li></ul>
+    <div class="ex-tip" style="color:var(--terra);border-top-color:var(--terra-pale)">⚡ Nos dias de pouca energia: só 1 série. Qualquer coisa conta.</div>
+  </div>
+  <div class="ex-card gold">
+    <div class="ex-header"><div class="ex-emoji">🚶</div><div class="ex-name">Módulo Caminhada</div><div class="ex-badge">20–30 min</div></div>
+    <ul class="ex-steps"><li>Calce um tênis e saia — sem destino fixo</li><li>Ande em ritmo confortável</li><li>Sem fone nos primeiros 10 min</li><li>Opcional: podcast da área nos últimos 15 min</li></ul>
+    <div class="ex-tip" style="color:var(--gold);border-top-color:var(--gold-pale)">🧠 O ansiolítico mais eficaz comprovado pela ciência.</div>
+  </div>
+  <div class="ex-card">
+    <div class="ex-header"><div class="ex-emoji">🌬️</div><div class="ex-name">Módulo Respiração</div><div class="ex-badge">5–10 min</div></div>
+    <ul class="ex-steps"><li>Sente-se confortável, feche os olhos</li><li>Inspire pelo nariz contando até 4</li><li>Segure contando até 4</li><li>Expire pela boca contando até 6</li><li>Repita 8–10 vezes sem pressa</li></ul>
+    <div class="ex-tip">📱 App "Insight Timer" — meditações em português</div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PÁGINA: ANSIEDADE
+════════════════════════════════════════ -->
+<div class="page" id="page-ansiedade">
+<div class="container">
+  <div class="hero dark">
+    <div class="hero-label">Ferramentas práticas</div>
+    <h1>Manejo da Ansiedade 🧠</h1>
+    <p>Técnicas rápidas + hábitos clicáveis. Cada hábito marcado conta no seu progresso.</p>
+  </div>
+
+  <div class="sec-title">Técnicas Rápidas</div>
+  <div class="anx-card"><div class="anx-icon">🔢</div><div class="anx-name">Técnica 5-4-3-2-1</div><div class="anx-desc">Nomeie: 5 coisas que vê, 4 que toca, 3 que ouve, 2 que cheira, 1 que saboreia. Traz a mente para o presente imediatamente.</div><div class="anx-time">⏱ 2–3 min</div></div>
+  <div class="anx-card"><div class="anx-icon">🌬️</div><div class="anx-name">Respiração 4-4-6</div><div class="anx-desc">Inspire 4s → segure 4s → expire 6s. Ativa o sistema nervoso parassimpático. Funciona em qualquer lugar.</div><div class="anx-time">⏱ 3–5 min</div></div>
+  <div class="anx-card"><div class="anx-icon">📝</div><div class="anx-name">Dump Mental</div><div class="anx-desc">Escreva TUDO que está na cabeça, sem filtro. Só tirar de dentro. Depois escolha 1 coisa para fazer.</div><div class="anx-time">⏱ 5 min</div></div>
+
+  <!-- HÁBITOS CLICÁVEIS -->
+  <div class="sec-title">Hábitos Positivos</div>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Toque para registrar. Cada hábito marcado conta no seu progresso semanal e mensal! ✨</p>
+  <div class="habit-grid" id="habit-grid"></div>
+
+  <div class="sec-title">Gatilhos e Respostas</div>
+  <div class="rule-card"><div class="rule-num" style="background:#fde8e8;color:var(--danger)">😰</div><div><div class="rule-title">"Tenho muito a fazer"</div><div class="rule-desc">Pare. Escreva tudo. Risque o não urgente. Escolha 1. Faça só ela.</div></div></div>
+  <div class="rule-card"><div class="rule-num" style="background:var(--terra-pale);color:var(--terra)">😔</div><div><div class="rule-title">"Não evoluí hoje"</div><div class="rule-desc">Pense: "O que fiz hoje que o passado-eu não faria?" Qualquer coisa conta.</div></div></div>
+  <div class="rule-card"><div class="rule-num terra">🌀</div><div><div class="rule-title">Loop de pensamentos à noite</div><div class="rule-desc">Anote no papel. "Já está registrado, resolvo amanhã." Depois: 4-4-6.</div></div></div>
+
+  <div class="info-box">
+    <h3>💙 Uma coisa importante</h3>
+    <p>Ansiedade não é fraqueza. As técnicas ajudam no dia a dia, mas se impactar muito sua qualidade de vida, considere um psicólogo. CAPS é gratuito pelo SUS.</p>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PÁGINA: DIÁRIO DE VITÓRIAS
+════════════════════════════════════════ -->
+<div class="page" id="page-diario">
+<div class="container">
+  <div class="hero gold">
+    <div class="hero-label">Registro diário</div>
+    <h1>Diário de Vitórias ✦</h1>
+    <p>Anote uma pequena vitória por dia. Com o tempo você verá o quanto avançou.</p>
+  </div>
+  <div class="vitoria-box">
+    <h3>✦ Registre sua vitória de hoje</h3>
+    <p>Mandou currículo, fez exercício, leu a Bíblia, leu um livro, dormiu bem... tudo conta!</p>
+    <div class="vitoria-input-area">
+      <textarea id="vitoria-input" placeholder="Hoje eu..."></textarea>
+      <button class="btn-primary" onclick="salvarVitoria()">✦ Registrar vitória</button>
+    </div>
+  </div>
+  <div class="sec-title">Minhas Vitórias</div>
+  <div id="vitoria-list"></div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PÁGINA: RELATÓRIO
+════════════════════════════════════════ -->
+<div class="page" id="page-relatorio">
+<div class="container">
+  <div class="hero navy">
+    <div class="hero-label">Histórico completo</div>
+    <h1>Relatório de Desempenho 📊</h1>
+    <p>Dados salvos diariamente para acompanhar sua evolução e ajustar a rotina.</p>
+  </div>
+
+  <!-- RESUMO GERAL -->
+  <div class="sec-title">Resumo Geral</div>
+  <div class="diag-card" id="resumo-geral"></div>
+
+  <!-- RANKING FALHAS -->
+  <div class="sec-title">Tarefas com Mais Falhas</div>
+  <div class="diag-card"><div id="ranking-falhas"></div></div>
+
+  <!-- HÁBITOS POSITIVOS -->
+  <div class="sec-title">Hábitos Positivos — Acertos</div>
+  <div class="diag-card"><div id="ranking-habitos"></div></div>
+
+  <!-- HISTÓRICO DIÁRIO -->
+  <div class="sec-title">Histórico Diário</div>
+  <div id="historico-diario"></div>
+
+  <!-- EXPORTAR TEXTO -->
+  <div class="sec-title">Exportar</div>
+  <button class="btn-export" onclick="exportarRelatorio()">📋 Copiar relatório completo</button>
+
+  <!-- ZONA PERIGO -->
+  <div class="diag-card" style="margin-top:8px">
+    <div class="diag-title" style="color:var(--danger)">⚠️ Zona de Perigo</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Apaga todos os dados permanentemente.</p>
+    <button class="btn-reset danger" onclick="resetTotal()">🗑️ Apagar todos os dados</button>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PÁGINA: CONFIGURAÇÕES
+════════════════════════════════════════ -->
+<div class="page" id="page-config">
+<div class="container">
+  <div class="hero dark">
+    <div class="hero-label">Personalizar</div>
+    <h1>Configurações ⚙️</h1>
+    <p>Ajuste os lembretes e horários para a sua realidade.</p>
+  </div>
+
+  <div class="sec-title">Lembretes do Dia</div>
+  <div class="diag-card">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Edite o horário de cada lembrete. O app vai te avisar na hora certa.</p>
+    <div id="config-lembretes-lista"></div>
+    <button class="btn-export" style="margin-top:12px" onclick="salvarLembretes()">💾 Salvar Lembretes</button>
+  </div>
+
+  <div class="sec-title">Hábitos Positivos</div>
+  <div class="diag-card">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Adicione ou remova hábitos da lista de ansiedade.</p>
+    <div id="config-habitos-lista"></div>
+    <input class="input-field" id="novo-habito-input" placeholder="Novo hábito (ex: ☀️ Luz solar)">
+    <button class="btn-export" onclick="adicionarHabito()">➕ Adicionar Hábito</button>
+  </div>
+
+  <div class="sec-title">Salvar Dados do Dia</div>
+  <div class="diag-card">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Registra um snapshot do dia atual no histórico do relatório. Faça isso antes de dormir!</p>
+    <button class="btn-export" onclick="salvarSnapshotDia()">📸 Salvar snapshot de hoje</button>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════ -->
+<script>
+/* ══════════════════════════════════
+   ESTADO INICIAL / DEFAULTS
+══════════════════════════════════ */
+const STORAGE_KEY = 'rotina_cris_v5';
+
+// Labels de cada check para o diagnóstico
+const CHECK_LABELS = {
+  c1:'Levantei sem celular', c2:'Defini 3 prioridades',
+  c3:'Café com calma', c4:'Fiz movimento',
+  med1:'💊 Medicação manhã', biblia:'📖 Bíblia',
+  livro:'📚 Leitura de livro', c5:'Completei 1 prioridade',
+  c6:'Atividade noturna', c7:'Anotei vitória',
+  c8:'Celular longe antes de dormir', med2:'💊 Medicação noite',
+  culto:'✝️ Culto (domingo)'
+};
+
+// IDs presentes sempre; culto só domingo
+const CHECK_IDS_SEMANA  = ['c1','c2','c3','c4','med1','biblia','livro','c5','c6','c7','c8','med2'];
+const CHECK_IDS_DOMINGO = [...CHECK_IDS_SEMANA, 'culto'];
+
+// Lembretes padrão
+const LEMBRETES_DEFAULT = [
+  { hora:'07:00', texto:'🌅 Hora de iniciar o dia!',            tipo:'lembrete' },
+  { hora:'08:00', texto:'💊 Hora da medicação da manhã',         tipo:'med'      },
+  { hora:'09:00', texto:'📖 Que tal ler a Bíblia agora?',        tipo:'biblia'   },
+  { hora:'12:30', texto:'📚 Pausa para leitura do seu livro',    tipo:'livro'    },
+  { hora:'13:00', texto:'💧 Beba água e faça uma pausa',         tipo:'lembrete' },
+  { hora:'19:00', texto:'💊 Hora da medicação da noite',         tipo:'med'      },
+  { hora:'21:00', texto:'✦ Registre sua vitória do dia!',        tipo:'vitoria'  },
+  { hora:'22:00', texto:'📵 Hora de colocar o celular de lado',  tipo:'lembrete' },
+  { hora:'22:30', texto:'📸 Salve o snapshot de hoje!',          tipo:'lembrete' }
+];
+
+// Hábitos positivos padrão
+const HABITOS_DEFAULT = [
+  { id:'h_solar',     label:'☀️ Luz solar',       terra:false },
+  { id:'h_agua',      label:'💧 Hidratação',       terra:false },
+  { id:'h_celular',   label:'📵 Celular longe',    terra:false },
+  { id:'h_movimento', label:'🚶 Movimento',        terra:false },
+  { id:'h_sono',      label:'😴 Sono regular',     terra:false },
+  { id:'h_cafe',      label:'☕ Limite cafeína',   terra:true  },
+  { id:'h_redes',     label:'📱 Menos redes',      terra:true  },
+  { id:'h_anotar',    label:'✍️ Anotar preocupações', terra:true },
+  { id:'h_pausas',    label:'🌿 Pausas no trabalho', terra:false },
+  { id:'h_musica',    label:'🎵 Música calma',     terra:false },
+  { id:'h_biblia',    label:'📖 Bíblia',           terra:false },
+  { id:'h_livro',     label:'📚 Leitura',          terra:false }
+];
+
+/* ══════════════════════════════════
+   ESTADO GLOBAL
+══════════════════════════════════ */
+let state = {
+  checks:       {},   // { 'AAAA-MM-DD': { c1:true, ... } }
+  vitorias:     [],   // [{ texto, data }]
+  falhas:       {},   // { checkId: count }
+  habitos:      {},   // { 'AAAA-MM-DD': { h_solar: count, ... } }
+  habitosDef:   [],   // definição dos hábitos (personalizável)
+  lembretes:    [],   // lembretes editáveis
+  snapshots:    {},   // { 'AAAA-MM-DD': { pct, feitos, total, habitos, vitorias } }
+  lastLembrete: null
+};
+
+/* ══════════════════════════════════
+   PERSISTÊNCIA
+══════════════════════════════════ */
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      state = Object.assign(state, saved);
+    }
+  } catch(e) { console.warn('loadState error:', e); }
+  // Garantir defaults se vazio
+  if (!state.lembretes  || !state.lembretes.length)  state.lembretes  = JSON.parse(JSON.stringify(LEMBRETES_DEFAULT));
+  if (!state.habitosDef || !state.habitosDef.length)  state.habitosDef = JSON.parse(JSON.stringify(HABITOS_DEFAULT));
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e) { console.warn('saveState error:', e); }
+}
+
+/* ══════════════════════════════════
+   HELPERS DE DATA
+══════════════════════════════════ */
+function hoje()     { return new Date().toISOString().split('T')[0]; }
+function mesAtual() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+function ehDomingo(){ return new Date().getDay() === 0; }
+
+function checksHoje() {
+  return ehDomingo() ? CHECK_IDS_DOMINGO : CHECK_IDS_SEMANA;
+}
+
+function semanaIso(offset=0) {
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() - d.getDay() + offset);
+  return d.toISOString().split('T')[0];
+}
+
+function formatarData(iso) {
+  const [a,m,d] = iso.split('-');
+  return `${d}/${m}/${a}`;
+}
+
+function nomeDataHoje() {
+  const d = new Date();
+  const dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  return `${dias[d.getDay()]}, ${d.getDate()} de ${meses[d.getMonth()]}`;
+}
+
+/* ══════════════════════════════════
+   NAVEGAÇÃO
+══════════════════════════════════ */
+function goTo(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  // renderizações específicas por página
+  if (id === 'relatorio') renderRelatorio();
+  if (id === 'config')    renderConfig();
+  if (id === 'ansiedade') renderHabitos();
+}
+
+/* ══════════════════════════════════
+   CHECKLIST
+══════════════════════════════════ */
+function toggleCheck(el) {
+  const id  = el.dataset.id;
+  const dia = hoje();
+  if (!state.checks[dia]) state.checks[dia] = {};
+  const eraDone = !!state.checks[dia][id];
+  state.checks[dia][id] = !eraDone;
+  if (eraDone) state.falhas[id] = (state.falhas[id]||0) + 1;
+  saveState();
+  renderChecklist();
+  renderProgresso();
+}
+
+function renderChecklist() {
+  const dia   = hoje();
+  const dados = state.checks[dia] || {};
+  const ids   = checksHoje();
+
+  // Mostrar/ocultar seção culto
+  document.getElementById('section-culto').style.display = ehDomingo() ? '' : 'none';
+
+  document.querySelectorAll('.check-item').forEach(item => {
+    const id   = item.dataset.id;
+    const done = !!dados[id];
+    item.classList.toggle('done', done);
+    item.querySelector('.check-box').textContent = done ? '✓' : '';
+  });
+}
+
+function resetDia() {
+  if (!confirm('Reiniciar checklist de hoje?')) return;
+  const dia  = hoje();
+  const ids  = checksHoje();
+  const dados = state.checks[dia] || {};
+  ids.forEach(id => { if (!dados[id]) state.falhas[id] = (state.falhas[id]||0)+1; });
+  state.checks[dia] = {};
+  saveState();
+  renderChecklist();
+  renderProgresso();
+  toast('🔄 Checklist reiniciado!', 'lembrete');
+}
+
+/* ══════════════════════════════════
+   PROGRESSO
+══════════════════════════════════ */
+function calcPctDia() {
+  const ids   = checksHoje();
+  const dados = state.checks[hoje()] || {};
+  const n = ids.filter(id => dados[id]).length;
+  return Math.round((n / ids.length) * 100);
+}
+
+function calcPctSemana() {
+  let total=0, feitos=0;
+  for (let i=0; i<7; i++) {
+    const key = semanaIso(i);
+    if (key > hoje()) break;
+    const ids = key === hoje() ? checksHoje() : CHECK_IDS_SEMANA; // usa base padrão para dias passados
+    const dados = state.checks[key] || {};
+    total  += ids.length;
+    feitos += ids.filter(id => dados[id]).length;
+  }
+  return total>0 ? Math.round((feitos/total)*100) : 0;
+}
+
+function calcPctMes() {
+  const mes = mesAtual();
+  let total=0, feitos=0;
+  Object.entries(state.checks).forEach(([key, dados]) => {
+    if (!key.startsWith(mes)) return;
+    const ids = CHECK_IDS_SEMANA;
+    total  += ids.length;
+    feitos += ids.filter(id => dados[id]).length;
+  });
+  return total>0 ? Math.round((feitos/total)*100) : 0;
+}
+
+function setCirculo(el, pct) {
+  el.style.background = `conic-gradient(var(--sage) ${pct}%,var(--sand-dark) ${pct}%)`;
+}
+
+function renderProgresso() {
+  const ids   = checksHoje();
+  const dados = state.checks[hoje()] || {};
+  const feitos = ids.filter(id => dados[id]).length;
+  const total  = ids.length;
+  const pct    = Math.round((feitos/total)*100);
+
+  document.getElementById('check-bar').style.width   = pct + '%';
+  document.getElementById('check-count').textContent = `${feitos} / ${total}`;
+
+  const pd = calcPctDia(), ps = calcPctSemana(), pm = calcPctMes();
+  document.getElementById('pct-dia').textContent = pd+'%';
+  document.getElementById('pct-sem').textContent = ps+'%';
+  document.getElementById('pct-mes').textContent = pm+'%';
+  setCirculo(document.getElementById('circ-dia'), pd);
+  setCirculo(document.getElementById('circ-sem'), ps);
+  setCirculo(document.getElementById('circ-mes'), pm);
+}
+
+/* ══════════════════════════════════
+   HÁBITOS CLICÁVEIS
+══════════════════════════════════ */
+function toggleHabito(id) {
+  const dia = hoje();
+  if (!state.habitos[dia]) state.habitos[dia] = {};
+  const atual = state.habitos[dia][id] || 0;
+  state.habitos[dia][id] = atual > 0 ? 0 : 1; // toggle
+  saveState();
+  renderHabitos();
+  if (state.habitos[dia][id] > 0) {
+    const h = state.habitosDef.find(x=>x.id===id);
+    toast(`✨ Hábito registrado: ${h ? h.label : id}`, 'vitoria');
+  }
+}
+
+function renderHabitos() {
+  const grid = document.getElementById('habit-grid');
+  if (!grid) return;
+  const dia   = hoje();
+  const dados = state.habitos[dia] || {};
+
+  grid.innerHTML = state.habitosDef.map(h => {
+    const ativo = dados[h.id] > 0;
+    // contar total da semana
+    let semCount = 0;
+    for (let i=0;i<7;i++){
+      const key = semanaIso(i);
+      if (key>hoje()) break;
+      semCount += (state.habitos[key]||{})[h.id]||0;
+    }
+    return `<button class="habit-btn ${h.terra?'terra':''} ${ativo?'active':''}"
+      onclick="toggleHabito('${h.id}')">
+      ${escHtml(h.label)}
+      <span class="habit-count">${semCount}x</span>
+    </button>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════
+   VITÓRIAS
+══════════════════════════════════ */
+function salvarVitoria() {
+  const input = document.getElementById('vitoria-input');
+  const texto = input.value.trim();
+  if (!texto) return;
+  state.vitorias.unshift({ texto, data: hoje() });
+  input.value = '';
+  saveState();
+  renderVitorias();
+  toast('✦ Vitória registrada! Parabéns!', 'vitoria');
+}
+
+function renderVitorias() {
+  const el = document.getElementById('vitoria-list');
+  if (!state.vitorias.length) {
+    el.innerHTML = '<div class="vitoria-empty">Suas vitórias aparecerão aqui. Comece agora! 🌱</div>';
+    return;
+  }
+  el.innerHTML = state.vitorias.map(v => `
+    <div class="vitoria-item">
+      <span class="vitoria-item-icon">✦</span>
+      <span class="vitoria-item-text">${escHtml(v.texto)}</span>
+      <span class="vitoria-item-date">${formatarData(v.data)}</span>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════════
+   SNAPSHOT DIÁRIO (para relatório)
+══════════════════════════════════ */
+function salvarSnapshotDia() {
+  const dia   = hoje();
+  const ids   = checksHoje();
+  const dados = state.checks[dia] || {};
+  const feitos = ids.filter(id => dados[id]).length;
+  const total  = ids.length;
+  const pct    = Math.round((feitos/total)*100);
+
+  // Hábitos do dia
+  const habitosDia = Object.entries(state.habitos[dia]||{})
+    .filter(([,v])=>v>0)
+    .map(([id]) => { const h=state.habitosDef.find(x=>x.id===id); return h?h.label:id; });
+
+  // Vitórias do dia
+  const vitoriasDia = state.vitorias.filter(v=>v.data===dia).map(v=>v.texto);
+
+  // Falhas do dia (não concluídos)
+  const falhasDia = ids.filter(id => !dados[id]).map(id => CHECK_LABELS[id]||id);
+
+  state.snapshots[dia] = { pct, feitos, total, habitosDia, vitoriasDia, falhasDia, ts: new Date().toISOString() };
+  saveState();
+  toast(`📸 Snapshot de ${formatarData(dia)} salvo!`, 'vitoria');
+  renderRelatorio();
+}
+
+/* ══════════════════════════════════
+   RELATÓRIO
+══════════════════════════════════ */
+function renderRelatorio() {
+  renderResumoGeral();
+  renderRankingFalhas();
+  renderRankingHabitos();
+  renderHistoricoDiario();
+}
+
+function renderResumoGeral() {
+  const el = document.getElementById('resumo-geral');
+  const diasSnap    = Object.keys(state.snapshots).length;
+  const diasChecks  = Object.keys(state.checks).length;
+  const totalVit    = state.vitorias.length;
+  const pctSem      = calcPctSemana();
+  const pctMes      = calcPctMes();
+
+  // média geral dos snapshots
+  const medias = Object.values(state.snapshots).map(s=>s.pct);
+  const mediaGeral = medias.length ? Math.round(medias.reduce((a,b)=>a+b,0)/medias.length) : 0;
+
+  el.innerHTML = `
+    <div class="diag-item"><div class="diag-rank" style="background:var(--sage-pale);color:var(--sage)">📅</div><div class="diag-name">Dias com registro ativo</div><div class="diag-count good">${diasChecks}</div></div>
+    <div class="diag-item"><div class="diag-rank" style="background:var(--sage-pale);color:var(--sage)">📸</div><div class="diag-name">Dias com snapshot salvo</div><div class="diag-count good">${diasSnap}</div></div>
+    <div class="diag-item"><div class="diag-rank" style="background:#faf3e0;color:var(--gold)">✦</div><div class="diag-name">Vitórias registradas</div><div class="diag-count good">${totalVit}</div></div>
+    <div class="diag-item"><div class="diag-rank" style="background:var(--sage-pale);color:var(--sage)">📊</div><div class="diag-name">Aproveitamento esta semana</div><div class="diag-count good">${pctSem}%</div></div>
+    <div class="diag-item"><div class="diag-rank" style="background:var(--sage-pale);color:var(--sage)">🗓️</div><div class="diag-name">Aproveitamento este mês</div><div class="diag-count good">${pctMes}%</div></div>
+    <div class="diag-item"><div class="diag-rank" style="background:var(--navy-pale);color:var(--navy)">⭐</div><div class="diag-name">Média geral (snapshots)</div><div class="diag-count good">${mediaGeral}%</div></div>
+  `;
+}
+
+function renderRankingFalhas() {
+  const el = document.getElementById('ranking-falhas');
+  const sorted = Object.entries(state.falhas||{})
+    .filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if (!sorted.length) { el.innerHTML='<div class="diag-empty">Nenhuma falha registrada ainda! 🌿</div>'; return; }
+  el.innerHTML = sorted.map(([id,n],i) => `
+    <div class="diag-item">
+      <div class="diag-rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</div>
+      <div class="diag-name">${escHtml(CHECK_LABELS[id]||id)}</div>
+      <div class="diag-count">${n}x</div>
+    </div>`).join('');
+}
+
+function renderRankingHabitos() {
+  const el = document.getElementById('ranking-habitos');
+  // soma todos os dias
+  const totais = {};
+  Object.values(state.habitos).forEach(dia => {
+    Object.entries(dia).forEach(([id,v]) => { totais[id] = (totais[id]||0)+(v||0); });
+  });
+  const sorted = Object.entries(totais).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if (!sorted.length) { el.innerHTML='<div class="diag-empty">Nenhum hábito registrado ainda.</div>'; return; }
+  el.innerHTML = sorted.map(([id,n],i) => {
+    const h = state.habitosDef.find(x=>x.id===id);
+    return `<div class="diag-item">
+      <div class="diag-rank" style="background:var(--sage-pale);color:var(--sage)">${i+1}</div>
+      <div class="diag-name">${escHtml(h?h.label:id)}</div>
+      <div class="diag-count good">${n}x</div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistoricoDiario() {
+  const el = document.getElementById('historico-diario');
+  const snaps = Object.entries(state.snapshots).sort((a,b)=>b[0].localeCompare(a[0]));
+  if (!snaps.length) {
+    el.innerHTML = '<div class="vitoria-empty">Nenhum snapshot salvo ainda.<br>Use "Salvar snapshot de hoje" em ⚙️ Configurações!</div>';
+    return;
+  }
+  el.innerHTML = snaps.map(([data, s]) => {
+    const cor = s.pct>=80 ? 'var(--sage)' : s.pct>=50 ? 'var(--gold)' : 'var(--terra)';
+    const habitosHtml = s.habitosDia && s.habitosDia.length
+      ? s.habitosDia.map(h=>`<span class="relatorio-habito-tag">${escHtml(h)}</span>`).join('')
+      : '<span style="font-size:12px;color:var(--muted)">nenhum</span>';
+    const falhasHtml = s.falhasDia && s.falhasDia.length
+      ? s.falhasDia.slice(0,4).map(f=>`<span class="relatorio-habito-tag miss">${escHtml(f)}</span>`).join('')
+      : '';
+    const vit = s.vitoriasDia && s.vitoriasDia.length ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">✦ ${escHtml(s.vitoriasDia[0])}</div>` : '';
+    return `<div class="relatorio-dia">
+      <div class="relatorio-dia-data">${formatarData(data)}</div>
+      <div class="relatorio-dia-pct" style="color:${cor}">${s.pct}%</div>
+      <div class="relatorio-dia-sub">${s.feitos} de ${s.total} tarefas concluídas</div>
+      ${vit}
+      <div class="relatorio-habitos" style="margin-top:6px">${habitosHtml}</div>
+      ${falhasHtml ? `<div class="relatorio-habitos" style="margin-top:4px">${falhasHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function exportarRelatorio() {
+  const snaps  = Object.entries(state.snapshots).sort((a,b)=>b[0].localeCompare(a[0]));
+  const pctSem = calcPctSemana(), pctMes = calcPctMes();
+  const totalVit = state.vitorias.length;
+
+  let txt = `RELATÓRIO DE DESEMPENHO — CRISTIANE SANTORO\n`;
+  txt    += `Gerado em: ${new Date().toLocaleString('pt-BR')}\n`;
+  txt    += `${'═'.repeat(44)}\n\n`;
+  txt    += `RESUMO GERAL\n`;
+  txt    += `Semana atual: ${pctSem}% | Mês atual: ${pctMes}%\n`;
+  txt    += `Total de vitórias: ${totalVit}\n\n`;
+
+  if (snaps.length) {
+    txt += `HISTÓRICO DIÁRIO\n${'─'.repeat(30)}\n`;
+    snaps.forEach(([data, s]) => {
+      txt += `\n${formatarData(data)} — ${s.pct}% (${s.feitos}/${s.total})\n`;
+      if (s.habitosDia?.length) txt += `  Hábitos: ${s.habitosDia.join(', ')}\n`;
+      if (s.vitoriasDia?.length) txt += `  Vitória: ${s.vitoriasDia[0]}\n`;
+      if (s.falhasDia?.length)  txt += `  Falhas:  ${s.falhasDia.slice(0,3).join(', ')}\n`;
+    });
+  }
+
+  const sorted = Object.entries(state.falhas||{}).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if (sorted.length) {
+    txt += `\nTOP DIFICULDADES\n${'─'.repeat(30)}\n`;
+    sorted.forEach(([id,n],i) => { txt += `${i+1}. ${CHECK_LABELS[id]||id}: ${n}x\n`; });
+  }
+
+  // Copiar para clipboard
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(()=>toast('📋 Relatório copiado!','vitoria'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    toast('📋 Relatório copiado!','vitoria');
+  }
+}
+
+/* ══════════════════════════════════
+   LEMBRETES EDITÁVEIS
+══════════════════════════════════ */
+function renderConfig() {
+  renderConfigLembretes();
+  renderConfigHabitos();
+}
+
+function renderConfigLembretes() {
+  const el = document.getElementById('config-lembretes-lista');
+  if (!el) return;
+  const agora = new Date();
+  const horaAtual = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}`;
+
+  el.innerHTML = state.lembretes.map((l,i) => {
+    const passado = l.hora < horaAtual;
+    return `<div class="lembrete-item">
+      <input type="time" class="lembrete-hora-input" value="${l.hora}"
+        onchange="state.lembretes[${i}].hora=this.value" />
+      <div class="lembrete-texto">${escHtml(l.texto)}</div>
+      <div class="lembrete-status ${passado?'passado':'ativo'}">${passado?'Passou':'Hoje'}</div>
+    </div>`;
+  }).join('');
+}
+
+function salvarLembretes() {
+  // Recolhe os valores dos inputs (já atualizados pelo onchange)
+  // Ordena por hora
+  state.lembretes.sort((a,b)=>a.hora.localeCompare(b.hora));
+  saveState();
+  renderConfigLembretes();
+  toast('💾 Lembretes salvos!', 'lembrete');
+}
+
+/* ══════════════════════════════════
+   HÁBITOS — CONFIG
+══════════════════════════════════ */
+function renderConfigHabitos() {
+  const el = document.getElementById('config-habitos-lista');
+  if (!el) return;
+  el.innerHTML = state.habitosDef.map((h,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--sand)">
+      <span style="flex:1;font-size:14px">${escHtml(h.label)}</span>
+      <button onclick="removerHabito(${i})"
+        style="background:var(--sand-dark);border:none;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;color:var(--danger);font-weight:700">✕ Remover</button>
+    </div>`).join('');
+}
+
+function adicionarHabito() {
+  const input = document.getElementById('novo-habito-input');
+  const label = input.value.trim();
+  if (!label) return;
+  const id = 'h_custom_' + Date.now();
+  state.habitosDef.push({ id, label, terra: false });
+  input.value = '';
+  saveState();
+  renderConfigHabitos();
+  renderHabitos();
+  toast(`➕ Hábito adicionado: ${label}`, 'lembrete');
+}
+
+function removerHabito(i) {
+  if (!confirm('Remover este hábito?')) return;
+  state.habitosDef.splice(i,1);
+  saveState();
+  renderConfigHabitos();
+  renderHabitos();
+}
+
+/* ══════════════════════════════════
+   LEMBRETES — VERIFICAÇÃO AUTOMÁTICA
+══════════════════════════════════ */
+function verificarLembretes() {
+  const agora = new Date();
+  const horaAtual = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}`;
+  const chave = hoje() + '_' + horaAtual;
+  if (state.lastLembrete === chave) return;
+
+  const l = state.lembretes.find(x => x.hora === horaAtual);
+  if (l) {
+    state.lastLembrete = chave;
+    saveState();
+    toast(l.texto, l.tipo);
+  }
+}
+
+/* ══════════════════════════════════
+   MODAL
+══════════════════════════════════ */
+function fecharModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+/* ══════════════════════════════════
+   TOAST
+══════════════════════════════════ */
+function toast(msg, tipo='lembrete') {
+  const icons = { lembrete:'🔔', med:'💊', vitoria:'✦', biblia:'📖', livro:'📚' };
+  const el = document.createElement('div');
+  el.className = `toast ${tipo}`;
+  el.innerHTML = `<span class="toast-icon">${icons[tipo]||'🔔'}</span>${escHtml(msg)}`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 4200);
+}
+
+/* ══════════════════════════════════
+   UTILS
+══════════════════════════════════ */
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ══════════════════════════════════
+   RESET TOTAL
+══════════════════════════════════ */
+function resetTotal() {
+  if (!confirm('Apagar TODOS os dados? Ação irreversível.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = { checks:{}, vitorias:[], falhas:{}, habitos:{}, habitosDef:[], lembretes:[], snapshots:{}, lastLembrete:null };
+  state.lembretes  = JSON.parse(JSON.stringify(LEMBRETES_DEFAULT));
+  state.habitosDef = JSON.parse(JSON.stringify(HABITOS_DEFAULT));
+  saveState();
+  renderChecklist(); renderProgresso(); renderVitorias();
+  toast('🗑️ Dados apagados.', 'lembrete');
+}
+
+/* ══════════════════════════════════
+   AUTO-SNAPSHOT MEIA-NOITE
+══════════════════════════════════ */
+function verificarSnapshotAutomatico() {
+  // Salva snapshot automático às 23:59 se ainda não foi salvo
+  const agora  = new Date();
+  const hora   = agora.getHours();
+  const minuto = agora.getMinutes();
+  if (hora === 23 && minuto === 59) {
+    const dia = hoje();
+    if (!state.snapshots[dia]) salvarSnapshotDia();
+  }
+}
+
+/* ══════════════════════════════════
+   INICIALIZAÇÃO
+══════════════════════════════════ */
+function init() {
+  loadState();
+
+  document.getElementById('data-hoje').textContent = nomeDataHoje();
+
+  renderChecklist();
+  renderProgresso();
+  renderVitorias();
+
+  // Checagem de lembretes e snapshot a cada minuto
+  verificarLembretes();
+  verificarSnapshotAutomatico();
+  setInterval(() => { verificarLembretes(); verificarSnapshotAutomatico(); }, 60000);
+
+  // Toast de boas-vindas
+  setTimeout(() => toast('🌿 Bom dia, Cristiane! Que hoje seja mais um dia de progresso.','lembrete'), 900);
+}
+
+
+/* ══ INSTALAÇÃO / BANNER ══ */
+let deferredPrompt = null;
+
+// Detectar "Adicionar à tela inicial" nativo (Android Chrome)
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  mostrarBanner();
+});
+
+function mostrarBanner() {
+  const banner = document.getElementById('install-banner');
+  if (!localStorage.getItem('banner_fechado')) banner.style.display = 'block';
+}
+
+function fecharBanner() {
+  document.getElementById('install-banner').style.display = 'none';
+  localStorage.setItem('banner_fechado', '1');
+}
+
+function mostrarGuia() {
+  document.getElementById('install-banner').style.display = 'none';
+  const modal = document.getElementById('guide-modal');
+  modal.classList.add('open');
+
+  // Detectar plataforma
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const isAndroid = /Android/.test(ua);
+
+  document.getElementById('guide-android').style.display = isAndroid ? 'block' : 'none';
+  document.getElementById('guide-ios').style.display     = isIOS ? 'block' : 'none';
+  document.getElementById('guide-other').style.display   = (!isIOS && !isAndroid) ? 'block' : 'none';
+
+  // Se tiver prompt nativo, usar
+  if (deferredPrompt && isAndroid) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(r => {
+      if (r.outcome === 'accepted') toast('🌿 App instalado! Abra pela tela inicial.','vitoria');
+      deferredPrompt = null;
+      fecharGuia();
+    });
+  }
+}
+
+function fecharGuia() {
+  document.getElementById('guide-modal').classList.remove('open');
+}
+
+// Fechar guide ao clicar fora
+document.getElementById('guide-modal').addEventListener('click', function(e){
+  if (e.target === this) fecharGuia();
+});
+
+// Mostrar banner após 3 segundos se não fechou antes
+setTimeout(() => {
+  if (!localStorage.getItem('banner_fechado') && !window.matchMedia('(display-mode: standalone)').matches) {
+    mostrarBanner();
+  }
+}, 3000);
+
+// Service Worker inline via blob para cache offline
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'rotina-v2';
+    self.addEventListener('install', e => {
+      self.skipWaiting();
+    });
+    self.addEventListener('activate', e => {
+      e.waitUntil(clients.claim());
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(
+        caches.match(e.request).then(r => r || fetch(e.request).catch(() => new Response('', {status: 408})))
+      );
+    });
+  `;
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(() => {});
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
